@@ -1,4 +1,4 @@
-#r "../FsharpUnionHelpers/bin/Debug/netcoreapp2.2/FSharpUnionHelpers.dll"
+#r "../FsharpUnionHelpers/bin/Debug/netstandard2.0/FSharpUnionHelpers.dll"
 open FSharpUnionHelpers
 open System
 
@@ -26,8 +26,8 @@ let toErrorDto =
     function
     | ProductError(e) ->
         match e with
-        | RetreivalFailed(dealershipId) -> { Code = "E01"; Message = sprintf "No products found for id=%A" dealershipId }
-        | NotFound(dealershipId, channel) -> { Code = "E02"; Message = sprintf "No products found for id=%A label=%A" dealershipId channel }
+        | RetreivalFailed(id) -> { Code = "E01"; Message = sprintf "No products found for id=%A" id }
+        | NotFound(id, label) -> { Code = "E02"; Message = sprintf "No products found for id=%A label=%A" id label }
         | Disabled -> { Code = "E03"; Message = "Disabled" }
     | ValidationError(e) -> 
         match e with
