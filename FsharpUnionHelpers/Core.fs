@@ -93,9 +93,7 @@ module Core =
         else if FSharpType.IsRecord t then getRecordFields t
         else if FSharpType.IsUnion t then 
             FSharpType.GetUnionCases(t)
-            |> Seq.choose (fun uc -> 
-                getUnionCaseRecord uc
-                |> Option.map getTypesPublicSignature)
+            |> Seq.choose (getUnionCaseRecord >> Option.map getTypesPublicSignature)
             |> Seq.collect id               
         else 
             seq { 
