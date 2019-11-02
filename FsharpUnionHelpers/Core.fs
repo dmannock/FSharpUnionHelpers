@@ -15,6 +15,7 @@ module Core =
  
     type CreatedUnion = obj
     let getUnionCases t = FSharpType.GetUnionCases(t, BindingFlags.NonPublic ||| BindingFlags.Public)
+    let getUnionCaseRecord (uc: UnionCaseInfo) = uc.GetFields() |> Array.tryHead |> Option.map (fun i -> i.PropertyType)
     let makeUnion uc args = FSharpValue.MakeUnion(uc,args |> Array.ofList, BindingFlags.NonPublic ||| BindingFlags.Instance ||| BindingFlags.Public)
     let isUnion t = FSharpType.IsUnion(t, BindingFlags.NonPublic ||| BindingFlags.Instance)
 
@@ -82,3 +83,23 @@ module Core =
         | t when t = typeof<int32> -> Unchecked.defaultof<int32> :> obj
         | t when t = typeof<int64> -> Unchecked.defaultof<int64> :> obj
         | _ -> null
+
+    // curently only cares about classes / records / unions top-level public signature
+    let rec getTypesPublicSignature (t: Type) = 
+        let bindingFlags = BindingFlags.Public ||| BindingFlags.Instance
+        let getRecordFields t = FSharpType.GetRecordFields t |> Seq.map (fun x -> x.Name, x.PropertyType.Name)
+        if t.IsPrimitive then Seq.singleton (String.Empty, t.Name)
+        else if t = typeof<String> then Seq.singleton (String.Empty, t.Name)
+        else if FSharpType.IsRecord t then getRecordFields t
+        else if FSharpType.IsUnion t then 
+            FSharpType.GetUnionCases(t)
+            |> Seq.choose (fun uc -> 
+                getUnionCaseRecord uc
+                |> Option.map getTypesPublicSignature)
+            |> Seq.collect id               
+        else 
+            seq { 
+                yield! t.GetProperties(bindingFlags) |> Seq.map (fun x -> x.Name, x.PropertyType.Name)
+                yield! t.GetFields(bindingFlags) |> Seq.map (fun x -> x.Name, x.FieldType.Name)
+            }
+        |> Seq.sortBy fst
