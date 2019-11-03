@@ -98,22 +98,19 @@ module Core =
 
     let rec getTypesPublicSignature (t: Type) = 
         let bindingFlags = BindingFlags.Public ||| BindingFlags.Instance
+        let propertiesToPublicSignature = 
+            Seq.map (fun (pi: PropertyInfo) -> {
+                Identifier = pi.Name
+                TypeSignature = getTypesPublicSignature pi.PropertyType
+            })
+            >> List.ofSeq
         if t.IsPrimitive then SimpleTypeSig(t.Name)
         else if t = typeof<String> then SimpleTypeSig(t.Name)
         else if FSharpType.IsRecord t then 
-            let fields = 
-                FSharpType.GetRecordFields t
-                |> Seq.map (fun t -> {
-                    Identifier = t.Name
-                    TypeSignature = getTypesPublicSignature t.PropertyType
-                })
-                |> List.ofSeq
+            let fields = FSharpType.GetRecordFields t |> propertiesToPublicSignature
             RecordTypeSig(t.Name, fields) 
         else if FSharpType.IsUnion t then 
-            let ucInfo (uc: UnionCaseInfo) = uc.GetFields() |> Seq.map (fun i -> {
-                Identifier = i.PropertyType.Name
-                TypeSignature = getTypesPublicSignature i.PropertyType
-            })
+            let ucInfo (uc: UnionCaseInfo) = uc.GetFields() |> propertiesToPublicSignature
             let unions = 
                 FSharpType.GetUnionCases(t)
                 |> Seq.map (ucInfo)
@@ -121,18 +118,12 @@ module Core =
                 |> List.ofSeq
             UnionTypeSig(t.Name, unions)                        
         else 
-            let properties = 
-                t.GetProperties(bindingFlags)
-                |> Seq.map (fun t -> {
-                    Identifier = t.Name
-                    TypeSignature = getTypesPublicSignature t.PropertyType
-                })
-                |> List.ofSeq
+            let properties = t.GetProperties(bindingFlags) |> propertiesToPublicSignature
             let fields = 
                 t.GetFields(bindingFlags)
-                |> Seq.map (fun t -> {
-                    Identifier = t.Name
-                    TypeSignature = getTypesPublicSignature t.FieldType
+                |> Seq.map (fun fi -> {
+                    Identifier = fi.Name
+                    TypeSignature = getTypesPublicSignature fi.FieldType
                 })
                 |> List.ofSeq
             ClassTypeSig(t.Name, properties@fields)  
@@ -143,7 +134,7 @@ module Core =
         | SimpleTypeSig(typeName) -> typeName
         | ClassTypeSig(typeName, fields) -> sprintf "%s={%s}" typeName (String.Join(";", fields |> List.map fieldToString))
         | RecordTypeSig(typeName, fields) -> sprintf "%s={%s}" typeName (String.Join(";", fields |> List.map fieldToString))                     
-        | UnionTypeSig(typeName, unions) -> sprintf "%s=%s" typeName (String.Join(";", unions |> List.map (fun f -> "|" + fieldToString f)))
+        | UnionTypeSig(typeName, unions) -> sprintf "%s=%s" typeName (String.Join(";", unions |> List.map (fieldToString >> sprintf "|%s")))
 
     // type IEvent = interface end
     // type AnEvent = {
