@@ -113,7 +113,7 @@ module Core =
             RecordTypeSig(t.Name, fields) 
         else if FSharpType.IsUnion t then 
             let ucInfo (uc: UnionCaseInfo) = uc.GetFields() |> Seq.map (fun i -> {
-                Identifier = i.PropertyType.Name
+                Identifier = uc.Name
                 TypeSignature = getTypesPublicSignature i.PropertyType
             })
             let unions = 

@@ -45,7 +45,6 @@ type IEvent = interface end
 type AnEvent = {
     Data: string
 }
-with interface IEvent
 
 type DataDto = {
     Name: string
@@ -55,7 +54,6 @@ type DataDto = {
 type WithNestedEvent = {
     Data: DataDto
 }
-with interface IEvent
 
 type InnerClass() = 
     member val Str = "" with get, set
@@ -68,6 +66,8 @@ type AClass() =
 type Events =
 | AnEvent of AnEvent
 | WithNestedEvent of WithNestedEvent
+| SimpleEvent of string
+with interface IEvent
 
 getTypesPublicSignature typeof<string> |> toSignatureString
 getTypesPublicSignature typeof<bool> |> toSignatureString
