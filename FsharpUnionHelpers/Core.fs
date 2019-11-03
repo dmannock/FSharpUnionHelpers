@@ -84,20 +84,75 @@ module Core =
         | t when t = typeof<int64> -> Unchecked.defaultof<int64> :> obj
         | _ -> null
 
+    type PublicTypeSignature =
+    | SimpleTypeSig of TypeName: string
+    | ClassTypeSig of TypeName: string * Fields: Fields list
+    | RecordTypeSig of TypeName: string * Fields: Fields list
+    // | TupleTypeSig of Fields: Fields list
+    // | EnumTypeSig of TypeName: string * Fields: string list
+    and Fields = {
+        Identifier: string
+        TypeSignature: PublicTypeSignature
+    }
+
     // curently only cares about classes / records / unions top-level public signature
     let rec getTypesPublicSignature (t: Type) = 
         let bindingFlags = BindingFlags.Public ||| BindingFlags.Instance
-        let getRecordFields t = FSharpType.GetRecordFields t |> Seq.map (fun x -> x.Name, x.PropertyType.Name)
-        if t.IsPrimitive then Seq.singleton (String.Empty, t.Name)
-        else if t = typeof<String> then Seq.singleton (String.Empty, t.Name)
-        else if FSharpType.IsRecord t then getRecordFields t
-        else if FSharpType.IsUnion t then 
-            FSharpType.GetUnionCases(t)
-            |> Seq.choose (getUnionCaseRecord >> Option.map getTypesPublicSignature)
-            |> Seq.collect id               
+        if t.IsPrimitive then SimpleTypeSig(t.Name)
+        else if t = typeof<String> then SimpleTypeSig(t.Name)
+        else if FSharpType.IsRecord t then 
+            let fields = 
+                FSharpType.GetRecordFields t
+                |> Seq.map (fun t -> {
+                    Identifier = t.Name
+                    TypeSignature = getTypesPublicSignature t.PropertyType
+                })
+                |> List.ofSeq
+            RecordTypeSig(t.Name, fields)                 
         else 
-            seq { 
-                yield! t.GetProperties(bindingFlags) |> Seq.map (fun x -> x.Name, x.PropertyType.Name)
-                yield! t.GetFields(bindingFlags) |> Seq.map (fun x -> x.Name, x.FieldType.Name)
-            }
-        |> Seq.sortBy fst
+            let properties = 
+                t.GetProperties(bindingFlags)
+                |> Seq.map (fun t -> {
+                    Identifier = t.Name
+                    TypeSignature = getTypesPublicSignature t.PropertyType
+                })
+                |> List.ofSeq
+            let fields = 
+                t.GetFields(bindingFlags)
+                |> Seq.map (fun t -> {
+                    Identifier = t.Name
+                    TypeSignature = getTypesPublicSignature t.FieldType
+                })
+                |> List.ofSeq
+            ClassTypeSig(t.Name, properties@fields)               
+
+    // type IEvent = interface end
+    // type AnEvent = {
+    //     Data: string
+    // }
+    // with interface IEvent
+
+    // type DataDto = {
+    //     Name: string
+    //     Value: int
+    // }
+
+    // type WithNestedEvent = {
+    //     Data: DataDto
+    // }
+    // with interface IEvent
+
+    // type InnerClass() = 
+    //     member val Str = "" with get, set
+    //     member val Int = 0 with get, set
+
+    // type AClass() = 
+    //     member val PublicStr = "" with get, set
+    //     member val InnerClass: InnerClass = Unchecked.defaultof<InnerClass> with get, set
+
+    // getTypesPublicSignature typeof<string>
+    // getTypesPublicSignature typeof<bool>
+    // getTypesPublicSignature typeof<WithNestedEvent>
+
+    // getTypesPublicSignature typeof<InnerClass>
+    // getTypesPublicSignature typeof<AClass>
