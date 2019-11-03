@@ -88,6 +88,7 @@ module Core =
     | SimpleTypeSig of TypeName: string
     | ClassTypeSig of TypeName: string * Fields: Fields list
     | RecordTypeSig of TypeName: string * Fields: Fields list
+    | UnionTypeSig of TypeName: string * Unions: Fields list
     // | TupleTypeSig of Fields: Fields list
     // | EnumTypeSig of TypeName: string * Fields: string list
     and Fields = {
@@ -95,7 +96,6 @@ module Core =
         TypeSignature: PublicTypeSignature
     }
 
-    // curently only cares about classes / records / unions top-level public signature
     let rec getTypesPublicSignature (t: Type) = 
         let bindingFlags = BindingFlags.Public ||| BindingFlags.Instance
         if t.IsPrimitive then SimpleTypeSig(t.Name)
@@ -108,7 +108,18 @@ module Core =
                     TypeSignature = getTypesPublicSignature t.PropertyType
                 })
                 |> List.ofSeq
-            RecordTypeSig(t.Name, fields)                 
+            RecordTypeSig(t.Name, fields) 
+        else if FSharpType.IsUnion t then 
+            let ucInfo (uc: UnionCaseInfo) = uc.GetFields() |> Seq.map (fun i -> {
+                Identifier = i.PropertyType.Name
+                TypeSignature = getTypesPublicSignature i.PropertyType
+            })
+            let unions = 
+                FSharpType.GetUnionCases(t)
+                |> Seq.map (ucInfo)
+                |> Seq.collect id
+                |> List.ofSeq
+            UnionTypeSig(t.Name, unions)                        
         else 
             let properties = 
                 t.GetProperties(bindingFlags)
@@ -132,6 +143,7 @@ module Core =
         | SimpleTypeSig(typeName) -> typeName
         | ClassTypeSig(typeName, fields) -> sprintf "%s={%s}" typeName (String.Join(";", fields |> List.map fieldToString))
         | RecordTypeSig(typeName, fields) -> sprintf "%s={%s}" typeName (String.Join(";", fields |> List.map fieldToString))                     
+        | UnionTypeSig(typeName, unions) -> sprintf "%s=%s" typeName (String.Join(";", unions |> List.map (fun f -> "|" + fieldToString f)))
 
     // type IEvent = interface end
     // type AnEvent = {
@@ -149,7 +161,6 @@ module Core =
     // }
     // with interface IEvent
 
-
     // type InnerClass() = 
     //     member val Str = "" with get, set
     //     member val Int = 0 with get, set
@@ -158,9 +169,15 @@ module Core =
     //     member val PublicStr = "" with get, set
     //     member val InnerClass: InnerClass = Unchecked.defaultof<InnerClass> with get, set
 
+    // type Events =
+    // | AnEvent of AnEvent
+    // | WithNestedEvent of WithNestedEvent
+
     // getTypesPublicSignature typeof<string> |> toSignatureString
     // getTypesPublicSignature typeof<bool> |> toSignatureString
     // getTypesPublicSignature typeof<WithNestedEvent> |> toSignatureString
 
     // getTypesPublicSignature typeof<InnerClass> |> toSignatureString
     // getTypesPublicSignature typeof<AClass> |> toSignatureString
+
+    // getTypesPublicSignature typeof<Events> |> toSignatureString
