@@ -124,7 +124,14 @@ module Core =
                     TypeSignature = getTypesPublicSignature t.FieldType
                 })
                 |> List.ofSeq
-            ClassTypeSig(t.Name, properties@fields)               
+            ClassTypeSig(t.Name, properties@fields)  
+
+    let rec toSignatureString signature =
+        let fieldToString { Identifier = ident; TypeSignature = typeSig } = sprintf "%s:%s" ident (toSignatureString typeSig)
+        match signature with
+        | SimpleTypeSig(typeName) -> typeName
+        | ClassTypeSig(typeName, fields) -> sprintf "%s={%s}" typeName (String.Join(";", fields |> List.map fieldToString))
+        | RecordTypeSig(typeName, fields) -> sprintf "%s={%s}" typeName (String.Join(";", fields |> List.map fieldToString))                     
 
     // type IEvent = interface end
     // type AnEvent = {
@@ -142,6 +149,7 @@ module Core =
     // }
     // with interface IEvent
 
+
     // type InnerClass() = 
     //     member val Str = "" with get, set
     //     member val Int = 0 with get, set
@@ -150,9 +158,9 @@ module Core =
     //     member val PublicStr = "" with get, set
     //     member val InnerClass: InnerClass = Unchecked.defaultof<InnerClass> with get, set
 
-    // getTypesPublicSignature typeof<string>
-    // getTypesPublicSignature typeof<bool>
-    // getTypesPublicSignature typeof<WithNestedEvent>
+    // getTypesPublicSignature typeof<string> |> toSignatureString
+    // getTypesPublicSignature typeof<bool> |> toSignatureString
+    // getTypesPublicSignature typeof<WithNestedEvent> |> toSignatureString
 
-    // getTypesPublicSignature typeof<InnerClass>
-    // getTypesPublicSignature typeof<AClass>
+    // getTypesPublicSignature typeof<InnerClass> |> toSignatureString
+    // getTypesPublicSignature typeof<AClass> |> toSignatureString
