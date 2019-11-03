@@ -85,13 +85,13 @@ module Core =
         | _ -> null
 
     type PublicTypeSignature =
-    | SimpleTypeSig of TypeName: string
-    | ClassTypeSig of TypeName: string * Fields: Fields list
-    | RecordTypeSig of TypeName: string * Fields: Fields list
-    | UnionTypeSig of TypeName: string * Unions: Fields list
-    // | TupleTypeSig of Fields: Fields list
-    // | EnumTypeSig of TypeName: string * Fields: string list
-    | UnsupportedTypeSig of Type
+        | SimpleTypeSig of TypeName: string
+        | ClassTypeSig of TypeName: string * Fields: Fields list
+        | RecordTypeSig of TypeName: string * Fields: Fields list
+        | UnionTypeSig of TypeName: string * Unions: Fields list
+        // | TupleTypeSig of Fields: Fields list
+        // | EnumTypeSig of TypeName: string * Fields: string list
+        | UnsupportedTypeSig of Type
     and Fields = {
         Identifier: string
         TypeSignature: PublicTypeSignature
