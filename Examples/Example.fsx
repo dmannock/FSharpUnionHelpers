@@ -39,3 +39,42 @@ let results = matchUnionWithFunction generateDefaultTypeParameter toErrorDto
 results
     |> List.sortBy (fun x -> x.Code)
     |> List.iter (printfn "%A")
+
+
+type IEvent = interface end
+type AnEvent = {
+    Data: string
+}
+with interface IEvent
+
+type DataDto = {
+    Name: string
+    Value: int
+}
+
+type WithNestedEvent = {
+    Data: DataDto
+}
+with interface IEvent
+
+type InnerClass() = 
+    member val Str = "" with get, set
+    member val Int = 0 with get, set
+
+type AClass() = 
+    member val PublicStr = "" with get, set
+    member val InnerClass: InnerClass = Unchecked.defaultof<InnerClass> with get, set
+
+type Events =
+| AnEvent of AnEvent
+| WithNestedEvent of WithNestedEvent
+
+getTypesPublicSignature typeof<string> |> toSignatureString
+getTypesPublicSignature typeof<bool> |> toSignatureString
+getTypesPublicSignature typeof<System.DateTime> |> toSignatureString
+getTypesPublicSignature typeof<WithNestedEvent> |> toSignatureString
+
+getTypesPublicSignature typeof<InnerClass> |> toSignatureString
+getTypesPublicSignature typeof<AClass> |> toSignatureString
+
+getTypesPublicSignature typeof<Events> |> toSignatureString

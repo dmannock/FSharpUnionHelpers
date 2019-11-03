@@ -91,6 +91,7 @@ module Core =
     | UnionTypeSig of TypeName: string * Unions: Fields list
     // | TupleTypeSig of Fields: Fields list
     // | EnumTypeSig of TypeName: string * Fields: string list
+    | UnsupportedTypeSig of Type
     and Fields = {
         Identifier: string
         TypeSignature: PublicTypeSignature
@@ -106,6 +107,7 @@ module Core =
             >> List.ofSeq
         if t.IsPrimitive then SimpleTypeSig(t.Name)
         else if t = typeof<String> then SimpleTypeSig(t.Name)
+        else if t = typeof<DateTime> then SimpleTypeSig(t.Name)
         else if FSharpType.IsRecord t then 
             let fields = FSharpType.GetRecordFields t |> propertiesToPublicSignature
             RecordTypeSig(t.Name, fields) 
@@ -120,7 +122,7 @@ module Core =
                 |> Seq.collect id
                 |> List.ofSeq
             UnionTypeSig(t.Name, unions)                        
-        else 
+        else if t.IsClass then
             let properties = t.GetProperties(bindingFlags) |> propertiesToPublicSignature
             let fields = 
                 t.GetFields(bindingFlags)
@@ -130,6 +132,8 @@ module Core =
                 })
                 |> List.ofSeq
             ClassTypeSig(t.Name, properties@fields)  
+        else
+            UnsupportedTypeSig(t)        
 
     let rec toSignatureString signature =
         let fieldToString { Identifier = ident; TypeSignature = typeSig } = sprintf "%s:%s" ident (toSignatureString typeSig)
@@ -138,40 +142,4 @@ module Core =
         | ClassTypeSig(typeName, fields) -> sprintf "%s={%s}" typeName (String.Join(";", fields |> List.map fieldToString))
         | RecordTypeSig(typeName, fields) -> sprintf "%s={%s}" typeName (String.Join(";", fields |> List.map fieldToString))                     
         | UnionTypeSig(typeName, unions) -> sprintf "%s=%s" typeName (String.Join(";", unions |> List.map (fieldToString >> sprintf "|%s")))
-
-    // type IEvent = interface end
-    // type AnEvent = {
-    //     Data: string
-    // }
-    // with interface IEvent
-
-    // type DataDto = {
-    //     Name: string
-    //     Value: int
-    // }
-
-    // type WithNestedEvent = {
-    //     Data: DataDto
-    // }
-    // with interface IEvent
-
-    // type InnerClass() = 
-    //     member val Str = "" with get, set
-    //     member val Int = 0 with get, set
-
-    // type AClass() = 
-    //     member val PublicStr = "" with get, set
-    //     member val InnerClass: InnerClass = Unchecked.defaultof<InnerClass> with get, set
-
-    // type Events =
-    // | AnEvent of AnEvent
-    // | WithNestedEvent of WithNestedEvent
-
-    // getTypesPublicSignature typeof<string> |> toSignatureString
-    // getTypesPublicSignature typeof<bool> |> toSignatureString
-    // getTypesPublicSignature typeof<WithNestedEvent> |> toSignatureString
-
-    // getTypesPublicSignature typeof<InnerClass> |> toSignatureString
-    // getTypesPublicSignature typeof<AClass> |> toSignatureString
-
-    // getTypesPublicSignature typeof<Events> |> toSignatureString
+        | UnsupportedTypeSig(t) -> failwithf "UNSUPPORTED TYPE SIGNATURE: %A" t
