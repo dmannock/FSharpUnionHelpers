@@ -105,13 +105,10 @@ module Core =
                 TypeSignature = getTypesPublicSignature pi.PropertyType
             })
             >> List.ofSeq
-        if t.IsPrimitive then SimpleTypeSig(t.Name)
-        else if t = typeof<String> then SimpleTypeSig(t.Name)
-        else if t = typeof<DateTime> then SimpleTypeSig(t.Name)
-        else if FSharpType.IsRecord t then 
+        if FSharpType.IsRecord t then 
             let fields = FSharpType.GetRecordFields t |> propertiesToPublicSignature
             RecordTypeSig(t.Name, fields) 
-        else if FSharpType.IsUnion t then 
+        else if FSharpType.IsUnion t && not (typeof<Collections.IEnumerable>.IsAssignableFrom(t)) then 
             let ucInfo (uc: UnionCaseInfo) = uc.GetFields() |> Seq.map (fun i -> {
                 Identifier = uc.Name
                 TypeSignature = getTypesPublicSignature i.PropertyType
@@ -121,8 +118,8 @@ module Core =
                 |> Seq.map (ucInfo)
                 |> Seq.collect id
                 |> List.ofSeq
-            UnionTypeSig(t.Name, unions)                        
-        else
+            UnionTypeSig(t.Name, unions) 
+        else if t.IsClass && t <> typeof<String> && not (typeof<Collections.IEnumerable>.IsAssignableFrom(t)) then
             let properties = t.GetProperties(bindingFlags) |> propertiesToPublicSignature
             let fields = 
                 t.GetFields(bindingFlags)
@@ -131,13 +128,15 @@ module Core =
                     TypeSignature = getTypesPublicSignature fi.FieldType
                 })
                 |> List.ofSeq
-            ClassTypeSig(t.Name, properties@fields)  
+            ClassTypeSig(t.ToString(), properties@fields)  
+        else   
+            SimpleTypeSig(t.ToString())  
 
     let rec toSignatureString signature =
         let fieldToString { Identifier = ident; TypeSignature = typeSig } = sprintf "%s:%s" ident (toSignatureString typeSig)
         match signature with
         | SimpleTypeSig(typeName) -> typeName
-        | ClassTypeSig(typeName, fields) -> sprintf "%s={%s}" typeName (String.Join(";", fields |> List.map fieldToString))
+        | ClassTypeSig(typeName, fields) -> sprintf "%s={%s}" typeName (String.Join("#", fields |> List.map fieldToString))
         | RecordTypeSig(typeName, fields) -> sprintf "%s={%s}" typeName (String.Join(";", fields |> List.map fieldToString))                     
-        | UnionTypeSig(typeName, unions) -> sprintf "%s=%s" typeName (String.Join(";", unions |> List.map (fieldToString >> sprintf "|%s")))
+        | UnionTypeSig(typeName, unions) -> sprintf "%s=%s" typeName (String.Join("", unions |> List.map (fieldToString >> sprintf "|%s")))
         | UnsupportedTypeSig(t) -> failwithf "UNSUPPORTED TYPE SIGNATURE: %A" t

@@ -51,7 +51,7 @@ type DataDto = {
     Value: int
 }
 
-type WithNestedEvent = {
+type RecordWithNestedRecord = {
     Data: DataDto
 }
 
@@ -61,18 +61,25 @@ type InnerClass() =
 
 type AClass() = 
     member val PublicStr = "" with get, set
+    member val Stamp = DateTime.MinValue with get, set
+    member val NullableInt = 0 |> Nullable with get, set
     member val InnerClass: InnerClass = Unchecked.defaultof<InnerClass> with get, set
 
 type Events =
 | AnEvent of AnEvent
-| WithNestedEvent of WithNestedEvent
+| WithNestedEvent of RecordWithNestedRecord
 | SimpleEvent of string
 with interface IEvent
 
 getTypesPublicSignature typeof<string> |> toSignatureString
 getTypesPublicSignature typeof<bool> |> toSignatureString
+getTypesPublicSignature typeof<Nullable<int>> |> toSignatureString
 getTypesPublicSignature typeof<System.DateTime> |> toSignatureString
-getTypesPublicSignature typeof<WithNestedEvent> |> toSignatureString
+getTypesPublicSignature typeof<ResizeArray<int>> |> toSignatureString
+
+getTypesPublicSignature typeof<List<int>> |> toSignatureString
+
+getTypesPublicSignature typeof<RecordWithNestedRecord> |> toSignatureString
 
 getTypesPublicSignature typeof<InnerClass> |> toSignatureString
 getTypesPublicSignature typeof<AClass> |> toSignatureString
