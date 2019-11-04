@@ -89,8 +89,8 @@ module Core =
         | ClassTypeSig of TypeName: string * Fields: Fields list
         | RecordTypeSig of TypeName: string * Fields: Fields list
         | UnionTypeSig of TypeName: string * Unions: Fields list
-        // | TupleTypeSig of Fields: Fields list
-        // | EnumTypeSig of TypeName: string * Fields: string list
+        | TupleTypeSig of Fields: PublicTypeSignature list
+        | EnumTypeSig of TypeName: string * FieldTypeName: string * Fields: string list
     and Fields = {
         Identifier: string
         TypeSignature: PublicTypeSignature
@@ -107,6 +107,10 @@ module Core =
         if FSharpType.IsRecord t then 
             let fields = FSharpType.GetRecordFields t |> propertiesToPublicSignature
             RecordTypeSig(t.Name, fields) 
+        else if FSharpType.IsTuple t then 
+            TupleTypeSig(FSharpType.GetTupleElements t |> Array.map getTypesPublicSignature |> List.ofArray)        
+        else if t.IsEnum then 
+            EnumTypeSig(t.Name, Enum.GetUnderlyingType(t).ToString(), Enum.GetNames(t) |> List.ofArray)        
         else if FSharpType.IsUnion t && not (typeof<Collections.IEnumerable>.IsAssignableFrom(t)) then 
             let ucInfo (uc: UnionCaseInfo) = uc.GetFields() |> Seq.map (fun i -> {
                 Identifier = uc.Name
@@ -138,3 +142,5 @@ module Core =
         | ClassTypeSig(typeName, fields) -> sprintf "%s={%s}" typeName (String.Join("#", fields |> List.map fieldToString))
         | RecordTypeSig(typeName, fields) -> sprintf "%s={%s}" typeName (String.Join(";", fields |> List.map fieldToString))                     
         | UnionTypeSig(typeName, unions) -> sprintf "%s=%s" typeName (String.Join("", unions |> List.map (fieldToString >> sprintf "|%s")))
+        | TupleTypeSig(fields) -> sprintf "(%s)" (String.Join(",", fields |> List.map toSignatureString))
+        | EnumTypeSig(typeName, fieldTypeName, fields) -> sprintf "%s:%s={%s}" typeName fieldTypeName (String.Join(",", fields))      
