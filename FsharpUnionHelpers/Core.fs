@@ -111,13 +111,13 @@ module Core =
             TupleTypeSig(FSharpType.GetTupleElements t |> Array.map getTypesPublicSignature |> List.ofArray)        
         else if t.IsEnum then 
             EnumTypeSig(t.Name, Enum.GetUnderlyingType(t).ToString(), Enum.GetNames(t) |> List.ofArray)        
-        else if FSharpType.IsUnion t && not (typeof<Collections.IEnumerable>.IsAssignableFrom(t)) then 
+        else if isUnion t && not (typeof<Collections.IEnumerable>.IsAssignableFrom(t)) then 
             let ucInfo (uc: UnionCaseInfo) = uc.GetFields() |> Seq.map (fun i -> {
                 Identifier = uc.Name
                 TypeSignature = getTypesPublicSignature i.PropertyType
             })
             let unions = 
-                FSharpType.GetUnionCases(t)
+                getUnionCases t
                 |> Seq.map (ucInfo)
                 |> Seq.collect id
                 |> List.ofSeq

@@ -8,14 +8,16 @@ Returns all Discriminative Union cases for a type
 ### matchUnionWithFunction
 Calls the provided function with all Discriminative Union cases for a type
 
-### getTypesPublicSignature (Work in progress - not fit for usage)
-Returns a types public signature for classes, records etc.
+### getTypesPublicSignature (Work in progress)
+Returns a types public signature for classes, records, enums, tuples, unions, etc.
 
 Note: known issues
-- union cases not useful and are unstable
-- types with single case private unions return an empty type signature as a simple type sig
-- nullable & others not handled
-- no guards or safety nested types
+- not all types tests (move examples to Unit Tests)
+- cases in union type signature could do with a more explicit domain model
+- no guards or safety for nested types (recursion)
+
+### toSignatureString
+Converts a types public signature from above to a printable string.
 
 ### Helpers with bindingflags for
 - getUnionCases

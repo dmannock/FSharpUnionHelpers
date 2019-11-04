@@ -94,3 +94,6 @@ getTypesPublicSignature typeof<Events> |> toSignatureString
 
 getTypesPublicSignature typeof<MyEnum> |> toSignatureString
 getTypesPublicSignature (tuple.GetType()) |> toSignatureString
+getTypesPublicSignature typeof<ErrorDto> |> toSignatureString
+
+getTypesPublicSignature typeof<WrappedId> |> toSignatureString
