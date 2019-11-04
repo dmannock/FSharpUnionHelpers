@@ -95,27 +95,23 @@ module Core =
         Identifier: string
         TypeSignature: PublicTypeSignature
     }
+    let createTypeSigFields id tsig = { Identifier = id; TypeSignature = tsig }
 
     let rec getTypesPublicSignature (t: Type) = 
-        let bindingFlags = BindingFlags.Public ||| BindingFlags.Instance
+        let publicBindingFlags = BindingFlags.Public ||| BindingFlags.Instance
         let propertiesToPublicSignature = 
-            Seq.map (fun (pi: PropertyInfo) -> {
-                Identifier = pi.Name
-                TypeSignature = getTypesPublicSignature pi.PropertyType
-            })
+            Seq.map (fun (pi: PropertyInfo) -> createTypeSigFields pi.Name (getTypesPublicSignature pi.PropertyType))
             >> List.ofSeq
         if FSharpType.IsRecord t then 
-            let fields = FSharpType.GetRecordFields t |> propertiesToPublicSignature
-            RecordTypeSig(t.Name, fields) 
+            RecordTypeSig(t.Name, (FSharpType.GetRecordFields t |> propertiesToPublicSignature)) 
         else if FSharpType.IsTuple t then 
             TupleTypeSig(FSharpType.GetTupleElements t |> Array.map getTypesPublicSignature |> List.ofArray)        
         else if t.IsEnum then 
             EnumTypeSig(t.Name, Enum.GetUnderlyingType(t).ToString(), Enum.GetNames(t) |> List.ofArray)        
         else if isUnion t && not (typeof<Collections.IEnumerable>.IsAssignableFrom(t)) then 
-            let ucInfo (uc: UnionCaseInfo) = uc.GetFields() |> Seq.map (fun i -> {
-                Identifier = uc.Name
-                TypeSignature = getTypesPublicSignature i.PropertyType
-            })
+            let ucInfo (uc: UnionCaseInfo) = 
+                uc.GetFields() 
+                |> Seq.map (fun i -> createTypeSigFields uc.Name (getTypesPublicSignature i.PropertyType))
             let unions = 
                 getUnionCases t
                 |> Seq.map (ucInfo)
@@ -123,13 +119,10 @@ module Core =
                 |> List.ofSeq
             UnionTypeSig(t.Name, unions) 
         else if t.IsClass && t <> typeof<String> && not (typeof<Collections.IEnumerable>.IsAssignableFrom(t)) then
-            let properties = t.GetProperties(bindingFlags) |> propertiesToPublicSignature
+            let properties = t.GetProperties(publicBindingFlags) |> propertiesToPublicSignature
             let fields = 
-                t.GetFields(bindingFlags)
-                |> Seq.map (fun fi -> {
-                    Identifier = fi.Name
-                    TypeSignature = getTypesPublicSignature fi.FieldType
-                })
+                t.GetFields(publicBindingFlags)
+                |> Seq.map (fun fi -> createTypeSigFields fi.Name (getTypesPublicSignature fi.FieldType))
                 |> List.ofSeq
             ClassTypeSig(t.ToString(), properties@fields)  
         else   
