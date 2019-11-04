@@ -91,7 +91,6 @@ module Core =
         | UnionTypeSig of TypeName: string * Unions: Fields list
         // | TupleTypeSig of Fields: Fields list
         // | EnumTypeSig of TypeName: string * Fields: string list
-        | UnsupportedTypeSig of Type
     and Fields = {
         Identifier: string
         TypeSignature: PublicTypeSignature
@@ -139,4 +138,3 @@ module Core =
         | ClassTypeSig(typeName, fields) -> sprintf "%s={%s}" typeName (String.Join("#", fields |> List.map fieldToString))
         | RecordTypeSig(typeName, fields) -> sprintf "%s={%s}" typeName (String.Join(";", fields |> List.map fieldToString))                     
         | UnionTypeSig(typeName, unions) -> sprintf "%s=%s" typeName (String.Join("", unions |> List.map (fieldToString >> sprintf "|%s")))
-        | UnsupportedTypeSig(t) -> failwithf "UNSUPPORTED TYPE SIGNATURE: %A" t

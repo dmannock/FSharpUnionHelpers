@@ -71,6 +71,12 @@ type Events =
 | SimpleEvent of string
 with interface IEvent
 
+type MyEnum =
+    | One = 1
+    | Two = 2
+
+let tuple = (1, "hi", InnerClass())
+
 getTypesPublicSignature typeof<string> |> toSignatureString
 getTypesPublicSignature typeof<bool> |> toSignatureString
 getTypesPublicSignature typeof<Nullable<int>> |> toSignatureString
@@ -85,3 +91,6 @@ getTypesPublicSignature typeof<InnerClass> |> toSignatureString
 getTypesPublicSignature typeof<AClass> |> toSignatureString
 
 getTypesPublicSignature typeof<Events> |> toSignatureString
+
+getTypesPublicSignature typeof<MyEnum> |> toSignatureString
+getTypesPublicSignature (tuple.GetType()) |> toSignatureString
