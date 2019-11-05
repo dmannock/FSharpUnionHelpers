@@ -8,14 +8,13 @@ module Core =
 
     // TEMP switching globally for initial play about
     [<Literal>]
-    let verbosePrinting = false
+    let VerbosePrinting = false
 
     let printDepth depth msg =
-        if verbosePrinting then printfn "%s%s" (String.replicate (depth *4) " ") msg
+        if VerbosePrinting then printfn "%s%s" (String.replicate (depth *4) " ") msg
  
     type CreatedUnion = obj
     let getUnionCases t = FSharpType.GetUnionCases(t, BindingFlags.NonPublic ||| BindingFlags.Public)
-    let getUnionCaseRecord (uc: UnionCaseInfo) = uc.GetFields() |> Array.tryHead |> Option.map (fun i -> i.PropertyType)
     let makeUnion uc args = FSharpValue.MakeUnion(uc,args |> Array.ofList, BindingFlags.NonPublic ||| BindingFlags.Instance ||| BindingFlags.Public)
     let isUnion t = FSharpType.IsUnion(t, BindingFlags.NonPublic ||| BindingFlags.Instance)
 
@@ -24,7 +23,7 @@ module Core =
         let rec loop depth t =
             let printDepth = printDepth depth
             // taken from http://stackoverflow.com/questions/6497058/lazy-cartesian-product-of-multiple-sequences-sequence-of-sequences
-            let cartesian_product2 sequences = 
+            let cartesianProduct2 sequences = 
                 let step acc sequence = seq {
                     for x in acc do
                     for y in sequence do
@@ -46,7 +45,7 @@ module Core =
                             [ fNonUnionArg f.PropertyType ])
                     |> List.ofSeq
                 let allCombinationsOfFieldPossibles = 
-                    cartesian_product2 constructorArgs
+                    cartesianProduct2 constructorArgs
                     |> Seq.map List.ofSeq
                     |> List.ofSeq
                 uc, allCombinationsOfFieldPossibles
