@@ -100,6 +100,7 @@ module Core =
         let publicBindingFlags = BindingFlags.Public ||| BindingFlags.Instance
         let propertiesToPublicSignature = 
             Seq.map (fun (pi: PropertyInfo) -> createTypeSigFields pi.Name (getTypesPublicSignature pi.PropertyType))
+            >> Seq.sortBy (fun x -> x.Identifier)
             >> List.ofSeq
         if FSharpType.IsRecord t then 
             RecordTypeSig(t.Name, (FSharpType.GetRecordFields t |> propertiesToPublicSignature)) 
@@ -113,6 +114,7 @@ module Core =
                 |> Seq.map (fun i -> createTypeSigFields uc.Name (getTypesPublicSignature i.PropertyType))
             let unions = 
                 getUnionCases t
+                |> Seq.sortBy (fun uc -> uc.Name)
                 |> Seq.map (ucInfo)
                 |> Seq.collect id
                 |> List.ofSeq
@@ -122,6 +124,7 @@ module Core =
             let fields = 
                 t.GetFields(publicBindingFlags)
                 |> Seq.map (fun fi -> createTypeSigFields fi.Name (getTypesPublicSignature fi.FieldType))
+                |> Seq.sortBy (fun x -> x.Identifier)
                 |> List.ofSeq
             ClassTypeSig(t.ToString(), properties@fields)  
         else   
