@@ -1,9 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <PackageId>FSharpUnionHelpers</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>Dan Mannock</Authors>
+    <Company>Dan Mannock</Company>
+    <PackageTags>F#;FSharp;Functional Programming</PackageTags>
+    <PackageDescription>F# Discriminative Union helpers</PackageDescription>
     <OutputType>dll</OutputType>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
+
 
   <ItemGroup>
     <Compile Include="Core.fs" />
