@@ -40,6 +40,7 @@ results
     |> List.sortBy (fun x -> x.Code)
     |> List.iter (printfn "%A")
 
+// examples for getTypesPublicSignature and toSignatureString
 
 type IEvent = interface end
 type AnEvent = {
@@ -77,23 +78,31 @@ type MyEnum =
 
 let tuple = (1, "hi", InnerClass())
 
-getTypesPublicSignature typeof<string> |> toSignatureString
+// built-in types
 getTypesPublicSignature typeof<bool> |> toSignatureString
-getTypesPublicSignature typeof<Nullable<int>> |> toSignatureString
+getTypesPublicSignature typeof<string> |> toSignatureString
 getTypesPublicSignature typeof<System.DateTime> |> toSignatureString
-getTypesPublicSignature typeof<ResizeArray<int>> |> toSignatureString
+// nullables
+getTypesPublicSignature typeof<Nullable<int>> |> toSignatureString
 
+// Collections
+getTypesPublicSignature typeof<ResizeArray<int>> |> toSignatureString
 getTypesPublicSignature typeof<List<int>> |> toSignatureString
 
+// records
+getTypesPublicSignature typeof<ErrorDto> |> toSignatureString
 getTypesPublicSignature typeof<RecordWithNestedRecord> |> toSignatureString
 
+// classes
 getTypesPublicSignature typeof<InnerClass> |> toSignatureString
 getTypesPublicSignature typeof<AClass> |> toSignatureString
 
+// Discriminated Unions
 getTypesPublicSignature typeof<Events> |> toSignatureString
-
-getTypesPublicSignature typeof<MyEnum> |> toSignatureString
-getTypesPublicSignature (tuple.GetType()) |> toSignatureString
-getTypesPublicSignature typeof<ErrorDto> |> toSignatureString
-
 getTypesPublicSignature typeof<WrappedId> |> toSignatureString
+
+// enums
+getTypesPublicSignature typeof<MyEnum> |> toSignatureString
+
+// tuples
+getTypesPublicSignature (tuple.GetType()) |> toSignatureString
