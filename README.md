@@ -1,25 +1,35 @@
 # FSharp Union Helpers
-F#  Discriminative Union helpers
+F# Discriminated Union Helpers
 
 ## Features
 ### getAllDUCases
-Returns all Discriminative Union cases for a type
+Returns all Discriminated Union cases for a type
 
-```(Type -> Obj) -> Type -> CreatedUnion list```
+```csharp
+(Type -> Obj) -> Type -> CreatedUnion list
+```
 
 Where
-- (Type -> obj) is a function to call on non-union types
-- Type is the union type
-- CreatedUnion list is a list of union case objects created from the provided union type
+- *(Type -> obj)* is a function to call on non-union types which creates a value for that type. For an example see the generateDefaultTypeParameter function.
+- *Type* is the union type
+- *CreatedUnion* list is a list of union case objects created from the provided union type
 
 ### matchUnionWithFunction
-
 Calls the provided function with all Discriminative Union cases for a type
 
-### getTypesPublicSignature
-```Type -> PublicTypeSignature```
+### generateDefaultTypeParameter
+Creates a value of the type passed in.
 
+```csharp
+Type -> Obj
+```
+
+### getTypesPublicSignature
 Returns a types public signature for classes, records, enums, tuples, unions, etc.
+
+```csharp
+Type -> PublicTypeSignature
+```
 
 Note: known issues
 - not all types tested (move examples to Unit Tests)
@@ -27,14 +37,24 @@ Note: known issues
 - no guards or safety for nested types (recursion)
 
 ### toSignatureString
-```PublicTypeSignature -> string```
-
 Converts a types public signature from above to a printable string.
+```csharp
+PublicTypeSignature -> string
+```
 
 ### Helpers with bindingflags for
-- getUnionCases ```Type -> UnionCaseInfo[]```
-- makeUnion ```UnionCaseInfo -> obj List -> obj```
-- isUnion ```Type -> bool```
+- getUnionCases 
+```csharp
+Type -> UnionCaseInfo[]
+```
+- makeUnion 
+```csharp
+UnionCaseInfo -> obj List -> obj
+```
+- isUnion 
+```csharp
+Type -> bool
+```
 
 ## Examples
-See /Examples
+See [/Examples](/examples/Example.fsx)
