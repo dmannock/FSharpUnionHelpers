@@ -57,4 +57,4 @@ Type -> bool
 ```
 
 ## Examples
-See [/Examples](/examples/Example.fsx)
+See [/Examples](/Examples/Example.fsx)
